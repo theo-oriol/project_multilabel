@@ -46,7 +46,6 @@ def extract_labels(path_source_csv,unique_species_name_list):
     """
     df = pd.read_csv(path_source_csv)
     df["sp_image"] = df["sp_image"]
-    # species_list = [s.lower().strip() for s in unique_species_name_list]
     species_list = [s for s in unique_species_name_list]
     df_filtered = df[df["sp_image"].isin(species_list)]
     habitat_columns = df.columns[5:]

@@ -83,7 +83,7 @@ def parse_opt():
     parser.add_argument("--device", "-d", type=str, default="cuda", help="cuda or cpu")
     parser.add_argument("--path_source_csv","-psc", type=str, default="/home/oriol@newcefe.newage.fr/Datasets/final_table2.csv", help="path to csv file")
     parser.add_argument("--path_source_img","-psi", type=str, default="/home/oriol@newcefe.newage.fr/Datasets//whole_bird", help="path to image folder")
-    parser.add_argument("--path_source_split","-pss", type=str, default="/home/oriol@newcefe.newage.fr/Models/project_multilabel/saved_split_limit:1000.pkl", help="path to split file")
+    parser.add_argument("--path_source_split","-pss", type=str, default="/home/oriol@newcefe.newage.fr/Models/project_multilabel/saved_mult_split_limit:1000.pkl", help="path to split file")
     parser.add_argument("--img_size", "-size", type=int, default=224, help="image size")
     parser.add_argument("--img_limitation","-iml", type=int, default=None, help="image limitation (None for no limitation)")
     parser.add_argument("--epochs", "-e", type=int, default=100, help="number of epochs")
