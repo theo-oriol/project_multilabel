@@ -9,7 +9,7 @@ from data.transforms import ApplyTransform
 
 class ImageDataset(Dataset):
     def __init__(self, parameters, paths, annotations, species_info, batch_size=1, transform=False, shuffle=False, valid=False):
-        self.parameters = parameters
+        self.parameters = { "img_size": parameters[0], "path_source_img": parameters[1], "model": parameters[2]}
         self.paths = np.array(paths)
         self.species_info = np.array(species_info)
         self.batch_size = batch_size
