@@ -66,7 +66,7 @@ def main(opt):
     families_plot(all_valid_real_prob,all_valid_labels,all_valid_family,habitats,families,destination_dir)
     species_plot(all_valid_real_prob,all_valid_labels,all_valid_species,destination_dir)
 
-    # tsne(all_valid_features,all_valid_labels,destination_dir)
+    tsne(all_valid_features,all_valid_labels,destination_dir)
 
 
 
