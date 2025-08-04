@@ -6,7 +6,7 @@ os.environ["TORCH_HOME"] = "~/.cache/torch/hub/checkpoints/"
 os.environ["XFORMERS_AVAILABLE"] = "False"
 
 def load_dino():
-    return torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14_reg')
+    return torch.hub.load('facebookresearch/dinov2', 'dinov2_vitl14')
 
 class Classifier(nn.Module):
     def __init__(self,output_dim=1):
