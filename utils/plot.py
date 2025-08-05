@@ -104,10 +104,9 @@ def plot_loss(epochs,metrics,destination_dir):
 def pression_recall(all_valid_real_prob,all_valid_labels,habitat,destination_dir):
     metric = MultilabelPrecisionRecallCurve(num_labels=all_valid_real_prob.shape[1])
     metric.update(torch.from_numpy(all_valid_real_prob), torch.from_numpy(all_valid_labels))
-    precision_list, recall_list, _ = metric.compute()
+    precision, recall, _ = metric.compute()
 
-    precision = np.array(precision_list)
-    recall = np.array(recall_list)
+    
     colors = generate_n_colors(len(precision))
     random.shuffle(colors)
 
@@ -195,8 +194,7 @@ def families_plot(all_valid_real_prob,all_valid_labels,all_valid_family,habitat,
         metric.update(y_pred, y_true)
         precision, recall, _ = metric.compute()
 
-        precision = np.array(precision)
-        recall = np.array(recall)
+        
 
         map_per_env = []
         for i in range(len(precision)):
