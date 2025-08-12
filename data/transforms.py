@@ -57,7 +57,7 @@ class ApplyTransform:
             transforms.ToTensor(),
         ])
             
-        if model in ['dinov2_vitl14_reg', 'dinov2_vitl14'] : 
+        if model in ['dinov2_vitl14_reg', 'dinov2_vitl14', 'dinov2_vitl14Scratch'] : 
             self.normalise = transforms.Compose([
                 lambda x: 255.0 * x[:3],
                 transforms.Normalize(

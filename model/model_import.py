@@ -9,5 +9,8 @@ def classifier(m, output_dim):
     elif m == "inceptionv4":
         from model.inception import inceptionv4 as Classifier
         return Classifier(output_dim=output_dim)
+    elif m == "dinov2_vitl14Scratch":
+        from model.dino_model import dinov2_vitl14Scratch as Classifier
+        return Classifier(output_dim=output_dim)
     else : raise ValueError(f"Unknown model type: {m}")
     
