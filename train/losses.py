@@ -24,6 +24,7 @@ class Focal_binary_cross_entropy(nn.Module):
         self.gamma = gamma
     def forward(self, logits, targets):   
         targets = targets.to(dtype=logits.dtype)
+
         bce = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
         pt = torch.exp(-bce) 
         focal_weight = (1 - pt).pow(self.gamma)

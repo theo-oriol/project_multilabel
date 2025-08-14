@@ -2,7 +2,7 @@ import timm
 import torch.nn as nn
 
 class eva02L(nn.Module):
-    def __init__(self, num_classes=1):
+    def __init__(self, output_dim=1):
         super().__init__()
         base_model= timm.create_model('eva02_large_patch14_448.mim_in22k_ft_in22k', pretrained=True)
         
@@ -14,11 +14,10 @@ class eva02L(nn.Module):
         for param in self.backbone.parameters():
             param.requires_grad = True
 
-
         self.classifier = nn.Sequential(
             nn.Linear(in_features, in_features//3),
             nn.ReLU(inplace=True),
-            nn.Linear(in_features//3, num_classes)  
+            nn.Linear(in_features//3, output_dim)  
         )
         
     def forward(self, x):

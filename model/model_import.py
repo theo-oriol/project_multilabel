@@ -14,6 +14,6 @@ def classifier(m, output_dim):
         return Classifier(output_dim=output_dim)
     elif m == "eva02L":
         from model.eva import eva02L as Classifier
-        return Classifier()
+        return Classifier(output_dim=output_dim)
     else : raise ValueError(f"Unknown model type: {m}")
     
