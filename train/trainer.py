@@ -1,10 +1,10 @@
 import torch 
 
-def train(epochs, device,datasets,model,criterion,optimizer,scheduler,metrics,nb_labels):
+def train(epochs, device,datasets,model,criterion,optimizer,scheduler,metrics,nb_labels,logger=None):
     print("Training")
     train_loader,valid_loader = datasets
-    train_metrics = metrics(nb_labels)
-    valid_metrics = metrics(nb_labels)
+    train_metrics = metrics(nb_labels,valid=False)
+    valid_metrics = metrics(nb_labels,valid=True)
 
     complete_log = ""
     for e in range(epochs):  
@@ -54,7 +54,9 @@ def train(epochs, device,datasets,model,criterion,optimizer,scheduler,metrics,nb
                 valid_metrics.update(outputs.detach().cpu(),labels.detach().cpu(),valid_loss.detach().cpu(),info)
 
         valid_metrics.merge()
-
+        if logger:
+            train_metrics.log_to_tensorboard(logger)
+            valid_metrics.log_to_tensorboard(logger)
         
         
 

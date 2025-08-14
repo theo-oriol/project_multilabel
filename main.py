@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 from utils.tsne import tsne
 from utils.utils import load_species_split, predictions_last_epochs,save_config,report,save_log
@@ -18,6 +19,11 @@ from train.metrics import MultiLabelMetricsSaver
 def main(opt):
 
     destination_dir = startup_dir(opt.name)
+
+    if opt.tensorboard:
+        from torch.utils.tensorboard import SummaryWriter
+        dest = destination_dir.split("/")[-1]
+        logger = SummaryWriter(os.path.join("runs", dest))
 
     save_config(vars(opt),destination_dir)
 
@@ -45,7 +51,10 @@ def main(opt):
     optimizer = get_optimizer(opt.opt,opt.lr,opt.weight_decay,model)
     scheduler = get_scheduler(opt.warmup_epochs,opt.epochs,optimizer)
 
-    trained_model, metrics, complete_log = train(opt.epochs, opt.device,(train_loader,valid_loader),model,criterion,optimizer,scheduler,MultiLabelMetricsSaver,np.array(list_of_train_image_labels).shape[1])
+    if opt.tensorboard:
+        logger = SummaryWriter(os.path.join("runs", destination_dir.split("/")[-1]))
+        
+    trained_model, metrics, complete_log = train(opt.epochs, opt.device,(train_loader,valid_loader),model,criterion,optimizer,scheduler,MultiLabelMetricsSaver,np.array(list_of_train_image_labels).shape[1],logger if opt.tensorboard else None)
 
     save_log(complete_log,destination_dir)
     torch.save(trained_model.state_dict(),os.path.join(destination_dir,"model"))  
@@ -90,6 +99,7 @@ def parse_opt():
     parser.add_argument("--lr", "-lr", type=float, default=1e-6, help="learning rate")
     parser.add_argument("--weight_decay", "-wd", type=float, default=1e-4, help="weight decay")
     parser.add_argument("--warmup_epochs", "-we", type=int, default=5, help="number of warmup epochs")  
+    parser.add_argument("--tensorboard", "-board", type=bool, default=False, help="Tensorboard logging")  
     return parser.parse_args()
                         
 if __name__ == "__main__":

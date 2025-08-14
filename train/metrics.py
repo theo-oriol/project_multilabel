@@ -5,7 +5,7 @@ from torcheval.metrics import MultilabelAccuracy
 from torcheval.metrics import BinaryAccuracy
 
 class MultiLabelMetricsSaver:
-    def __init__(self, num_labels):
+    def __init__(self, num_labels,valid=False):
         self.num_labels = num_labels
         self.metrics = {
             "species_macro_accuracy":[],
@@ -14,6 +14,8 @@ class MultiLabelMetricsSaver:
             "accuracy":[],
             "loss":[],
         }
+        self.global_step = 0
+        self.mode = "valid" if valid  else "train"
 
     def init_buffer(self):
         self.buffer_species_macro_accuracy_preds = defaultdict(list)
@@ -33,6 +35,7 @@ class MultiLabelMetricsSaver:
         self.macro_accuracy()
         self.accuracy()
         self.loss()
+        self.global_step += 1
 
 
     def update(self, y_pred, y_true, loss, info):
@@ -107,4 +110,21 @@ class MultiLabelMetricsSaver:
     def loss(self):
         l = np.mean(self.buffer_loss)
         self.metrics["loss"].append(l)
+    
+
+    def log_to_tensorboard(self,writer):
+        step = self.global_step
+        writer.add_scalar(f"Loss/{self.mode}", self.metrics["loss"][-1], step)
+        writer.add_scalar(f"MacroAccuracy/{self.mode}", self.metrics["macro_accuracy"][-1], step)
+        writer.add_scalar(f"OverallAccuracy/{self.mode}", self.metrics["accuracy"][-1], step)
+
+        for sid, acc in self.metrics["species_macro_accuracy"][-1].items():
+            writer.add_scalar(f"Species/{sid}_Accuracy/{self.mode}", acc, step)
         
+        acc = np.mean(list(self.metrics["species_macro_accuracy"][-1].values()))
+        writer.add_scalar(f"Species_macro/{self.mode}", acc, step)
+
+        for sid, acc in self.metrics["sexe_macro_accuracy"][-1].items():
+            writer.add_scalar(f"Sexe/{sid}_Accuracy/{self.mode}", acc, step)
+
+      
