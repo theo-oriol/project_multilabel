@@ -5,47 +5,47 @@ import yaml
 import pickle
 from sklearn.metrics import classification_report
 
-def predictions_last_epochs(device,model,dataloader):
+def predictions_last_epochs(device,model,dataloader, justvalid=False):
     train_loader,valid_loader = dataloader
     model.eval()
+    if not justvalid:
+        all_train_preds = []
+        all_train_labels = []
+        all_train_features = []
+        all_train_real_prob = []
+        all_train_species = []
+        all_train_sexe = []
+        all_train_family = []
+        
+        with torch.no_grad():
+                for i, (inputs, labels, _,info) in enumerate(train_loader):
+                    inputs = inputs.squeeze().to(device)
 
-    all_train_preds = []
-    all_train_labels = []
-    all_train_features = []
-    all_train_real_prob = []
-    all_train_species = []
-    all_train_sexe = []
-    all_train_family = []
-    
-    with torch.no_grad():
-            for i, (inputs, labels, _,info) in enumerate(train_loader):
-                inputs = inputs.squeeze().to(device)
+                    
+                    if inputs.ndim == 3:
+                        inputs = inputs.unsqueeze(0)
 
-                
-                if inputs.ndim == 3:
-                    inputs = inputs.unsqueeze(0)
+                    outputs, features = model(inputs)
+                    outputs = outputs.squeeze()
 
-                outputs, features = model(inputs)
-                outputs = outputs.squeeze()
-
-                preds = (torch.sigmoid(outputs) > 0.5).int()
+                    preds = (torch.sigmoid(outputs) > 0.5).int()
 
 
-                all_train_preds.extend(preds.cpu().numpy())
-                all_train_labels.extend(labels)
-                all_train_features.extend(features.cpu().numpy())
-                all_train_real_prob.extend(outputs.cpu().numpy())
-                all_train_species.extend(info[:,0])
-                all_train_sexe.extend(info[:,1])
-                all_train_family.extend(info[:,2].cpu().numpy())
+                    all_train_preds.extend(preds.cpu().numpy())
+                    all_train_labels.extend(labels)
+                    all_train_features.extend(features.cpu().numpy())
+                    all_train_real_prob.extend(outputs.cpu().numpy())
+                    all_train_species.extend(info[:,0])
+                    all_train_sexe.extend(info[:,1])
+                    all_train_family.extend(info[:,2].cpu().numpy())
 
-    all_train_preds = np.array(all_train_preds)
-    all_train_labels = np.array(all_train_labels)
-    all_train_features = np.array(all_train_features)
-    all_train_real_prob = np.array(all_train_real_prob)
-    all_train_species = np.array(all_train_species)
-    all_train_sexe = np.array(all_train_sexe)
-    all_train_family = np.array(all_train_family)
+        all_train_preds = np.array(all_train_preds)
+        all_train_labels = np.array(all_train_labels)
+        all_train_features = np.array(all_train_features)
+        all_train_real_prob = np.array(all_train_real_prob)
+        all_train_species = np.array(all_train_species)
+        all_train_sexe = np.array(all_train_sexe)
+        all_train_family = np.array(all_train_family)
 
     all_valid_preds = []
     all_valid_labels = []
@@ -71,7 +71,7 @@ def predictions_last_epochs(device,model,dataloader):
                 all_valid_preds.extend(preds.cpu().numpy())
                 all_valid_labels.extend(labels)
                 all_valid_features.extend(features.cpu().numpy())
-                all_valid_real_prob.extend(outputs.cpu().numpy())
+                all_valid_real_prob.extend(torch.sigmoid(outputs).cpu().numpy())
                 all_valid_species.extend(info[:,0])
                 all_valid_sexe.extend(info[:,1])
                 all_valid_family.extend(info[:,2].cpu().numpy())
@@ -84,8 +84,10 @@ def predictions_last_epochs(device,model,dataloader):
     all_valid_sexe = np.array(all_valid_sexe)
     all_valid_family = np.array(all_valid_family)
 
-    return (all_train_preds,all_train_labels,all_train_features,all_train_real_prob,all_train_species,all_train_sexe,all_train_family), (all_valid_preds,all_valid_labels,all_valid_features,all_valid_real_prob,all_valid_species,all_valid_sexe,all_valid_family)
+    if not justvalid:
+        return (all_train_preds,all_train_labels,all_train_features,all_train_real_prob,all_train_species,all_train_sexe,all_train_family), (all_valid_preds,all_valid_labels,all_valid_features,all_valid_real_prob,all_valid_species,all_valid_sexe,all_valid_family)
 
+    return (all_valid_preds,all_valid_labels,all_valid_features,all_valid_real_prob,all_valid_species,all_valid_sexe,all_valid_family)
 
 def report(all_valid_labels, all_valid_preds,destination_dir):
     report_val = classification_report(all_valid_labels, all_valid_preds, zero_division=0)

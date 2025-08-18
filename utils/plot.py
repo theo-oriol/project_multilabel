@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import colorsys
 import random
+import math
 import torch 
 from torcheval.metrics import MultilabelPrecisionRecallCurve
 
@@ -314,3 +315,40 @@ def species_plot(all_valid_real_prob,all_valid_labels,all_valid_spe,destination_
     os.makedirs(destination_dir, exist_ok=True)
     plt.savefig(os.path.join(destination_dir, "Histogram_mAP_per_species.png"))
     plt.close()
+
+
+def prob_distribution(all_valid_real_prob,habitats,destination_dir, ncols=5):
+    n = all_valid_real_prob.shape[1]
+
+    
+    colors = generate_n_colors(n)
+    random.shuffle(colors)
+
+    ncols = min(ncols, n) if n > 0 else 1
+    nrows = math.ceil(n / ncols)
+
+    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 3), squeeze=False)
+
+    for i in range(n):
+        r, c = divmod(i, ncols)
+        ax = axes[r][c]
+
+        prob = all_valid_real_prob[:, i]
+        ax.hist(prob, bins=50, alpha=0.5, color=colors[i])
+
+        ax.set_title(f"{habitats[i]}")
+        ax.set_xlabel("Probability")
+        ax.set_ylabel("Frequency")
+        ax.set_xlim(0, 1)  
+        ax.grid(True)
+        ax.legend()
+
+    for j in range(n, nrows * ncols):
+        r, c = divmod(j, ncols)
+        axes[r][c].axis('off')
+
+    fig.tight_layout()
+    out_path = os.path.join(destination_dir, "probability_distribution.png")
+    fig.savefig(out_path, bbox_inches="tight", dpi=200)
+    plt.close(fig)
+    return out_path
