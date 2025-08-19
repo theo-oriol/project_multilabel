@@ -361,8 +361,8 @@ def prob_distribution(all_valid_real_prob,all_valid_labels,habitats,destination_
             precision_vals.append(precision_score(y, mask,zero_division=0))
             recall_vals.append(recall_score(y, mask,zero_division=0))
 
-        ax2.plot(bin_centers, precision_vals, marker='-', linewidth=1.5, label="Precision per bin")
-        ax2.plot(bin_centers, recall_vals, marker='-', linewidth=1.5, color="green", label="Precision per bin")
+        ax2.plot(bin_centers, precision_vals, linewidth=1.5, label="Precision per bin")
+        ax2.plot(bin_centers, recall_vals, linewidth=1.5, color="green", label="Precision per bin")
         ax2.set_ylim(0, 1)
         ax2.set_ylabel("Precision")
 
