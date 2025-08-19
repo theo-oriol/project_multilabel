@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import colorsys
 import random
 import math
+from sklearn.metrics import precision_score, recall_score
 import torch 
 from torcheval.metrics import MultilabelPrecisionRecallCurve
 
@@ -317,38 +318,68 @@ def species_plot(all_valid_real_prob,all_valid_labels,all_valid_spe,destination_
     plt.close()
 
 
-def prob_distribution(all_valid_real_prob,habitats,destination_dir, ncols=5):
-    n = all_valid_real_prob.shape[1]
+def prob_distribution(all_valid_real_prob,all_valid_labels,habitats,destination_dir, ncols=5,n_bins=100):
+    labels = np.asarray(all_valid_labels)
+    probs = np.asarray(all_valid_real_prob)
+    assert probs.shape == labels.shape, "probs and labels must have the same shape (N, C)"
+    N, n = probs.shape
 
-    
     colors = generate_n_colors(n)
     random.shuffle(colors)
 
-    ncols = min(ncols, n) if n > 0 else 1
+    ncols = min(max(1, ncols), max(1, n))
     nrows = math.ceil(n / ncols)
 
-    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 4, nrows * 3), squeeze=False)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 4.5, nrows * 3.4), squeeze=False)
+
+    # Shared binning across classes for consistency
+    bin_edges = np.linspace(0.0, 1.0, n_bins, endpoint=True)
+    bin_centers = bin_edges + 0.05
 
     for i in range(n):
         r, c = divmod(i, ncols)
         ax = axes[r][c]
 
-        prob = all_valid_real_prob[:, i]
-        ax.hist(prob, bins=50, alpha=0.5, color=colors[i])
+        p = probs[:, i]
+        y = labels[:, i].astype(int)
 
+        # Histogram (counts) on left axis
+        ax.hist(p, bins=bin_edges, alpha=0.45, color=colors[i], label=f"{habitats[i]}: counts")
+        ax.set_xlim(0, 1)
+        ax.set_xlabel("Predicted confidence")
+        ax.set_ylabel("Count")
         ax.set_title(f"{habitats[i]}")
-        ax.set_xlabel("Probability")
-        ax.set_ylabel("Frequency")
-        ax.set_xlim(0, 1)  
-        ax.grid(True)
-        ax.legend()
+        ax.grid(True, axis="both", alpha=0.25)
 
+        # Precision per bin on right axis
+        ax2 = ax.twinx()
+        # Compute per-bin precision = TP / (TP + FP)
+        precision_vals = []
+        recall_vals = []
+        for b in range(n_bins):
+            mask = np.array((p >= bin_edges[b])).astype(int)
+            precision_vals.append(precision_score(y, mask,zero_division=0))
+            recall_vals.append(recall_score(y, mask,zero_division=0))
+
+        ax2.plot(bin_centers, precision_vals, marker='-', linewidth=1.5, label="Precision per bin")
+        ax2.plot(bin_centers, recall_vals, marker='-', linewidth=1.5, color="green", label="Precision per bin")
+        ax2.set_ylim(0, 1)
+        ax2.set_ylabel("Precision")
+
+        # Build a combined legend (hist on ax, line on ax2)
+        # We fetch handles/labels from both axes
+        # h1, l1 = ax.get_legend_handles_labels()
+        # h2, l2 = ax2.get_legend_handles_labels()
+        # if h1 or h2:
+        #     ax2.legend(h1 + h2, l1 + l2, loc="lower right", fontsize=8, frameon=True)
+
+    # Turn off any unused axes
     for j in range(n, nrows * ncols):
         r, c = divmod(j, ncols)
         axes[r][c].axis('off')
 
     fig.tight_layout()
-    out_path = os.path.join(destination_dir, "probability_distribution.png")
+    out_path = os.path.join(destination_dir, "probability_distribution_with_precision.png")
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
     plt.close(fig)
     return out_path

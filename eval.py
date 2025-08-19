@@ -40,7 +40,7 @@ def eval(opt):
     pression_recall(all_valid_real_prob,all_valid_labels,habitats,destination_dir)
     families_plot(all_valid_real_prob,all_valid_labels,all_valid_family,habitats,families,destination_dir)
     species_plot(all_valid_real_prob,all_valid_labels,all_valid_species,destination_dir)
-    prob_distribution(all_valid_real_prob,habitats,destination_dir)
+    prob_distribution(all_valid_real_prob,all_valid_labels,habitats,destination_dir)
     tsne(all_valid_features,all_valid_labels,destination_dir)
 
 def parse_opt():
