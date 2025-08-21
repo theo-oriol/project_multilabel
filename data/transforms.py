@@ -1,4 +1,6 @@
 import numpy as np 
+import random
+from PIL import ImageDraw
 from torchvision.transforms.functional import pad
 from torchvision import transforms
 
@@ -25,7 +27,22 @@ class NewPad(object):
     def __call__(self, img):
         return pad(img, get_padding(img), self.fill, self.padding_mode)
 
+class RandomBlackout(object):
+    def __call__(self, img):
+        # Choose one of the three options at random
+        choice = random.choice(['left', 'right', 'none'])
+        if choice == 'none':
+            return img
 
+        img = img.copy()
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+        if choice == 'left':
+            draw.rectangle([0, 0, width // 2, height], fill=(0, 0, 0))
+        elif choice == 'right':
+            draw.rectangle([width // 2, 0, width, height], fill=(0, 0, 0))
+        return img
+    
 class ApplyTransform:
     """
     resize, dataaugmentation and normalisation 
@@ -52,8 +69,17 @@ class ApplyTransform:
             transforms.RandomApply([ transforms.GaussianBlur(kernel_size=5, sigma=(0.1, 2.0))],p=0.1),
             transforms.RandomAdjustSharpness(sharpness_factor=2.0, p=0.1),
             transforms.RandomApply([
-                transforms.RandomPosterize(bits=4)
-            ], p=0.1),         
+                transforms.RandomPosterize(bits=3)
+            ], p=0.1),     
+
+            transforms.RandomApply([
+                transforms.GaussianBlur(kernel_size=5, sigma=(0.1, 3.0))
+            ], p=0.3),    
+
+            transforms.RandomApply([
+                RandomBlackout()
+            ], p=1.0), 
+
             transforms.ToTensor(),
         ])
             
