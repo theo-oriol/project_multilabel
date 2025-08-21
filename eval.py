@@ -8,7 +8,7 @@ from data.health import check
 from data.utils import extract_labels, extract_labels_and_image, species_name_extraction, startup_dir
 from model.model_import import classifier
 from utils.tsne import tsne
-from utils.plot import prob_distribution, families_plot, pression_recall, species_plot
+from utils.plot import f1_per_cls, prob_distribution, families_plot, pression_recall, species_plot
 from utils.utils import load_species_split, predictions_last_epochs, report
 
 def eval(opt):
@@ -41,6 +41,7 @@ def eval(opt):
     families_plot(all_valid_real_prob,all_valid_labels,all_valid_family,habitats,families,destination_dir)
     species_plot(all_valid_real_prob,all_valid_labels,all_valid_species,destination_dir)
     prob_distribution(all_valid_real_prob,all_valid_labels,habitats,destination_dir)
+    f1_per_cls(all_valid_real_prob,all_valid_labels,habitats,destination_dir)
     tsne(all_valid_features,all_valid_labels,destination_dir)
 
 def parse_opt():

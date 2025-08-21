@@ -6,7 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from utils.tsne import tsne
 from utils.utils import load_species_split, predictions_last_epochs,save_config,report,save_log
-from utils.plot import families_plot, plot_loss, pression_recall, prob_distribution, species_plot
+from utils.plot import f1_per_cls, families_plot, plot_loss, pression_recall, prob_distribution, species_plot
 from data.utils import species_name_extraction, extract_labels, extract_labels_and_image, startup_dir
 from data.dataset import ImageDataset
 from data.health import check
@@ -74,6 +74,7 @@ def main(opt):
     families_plot(all_valid_real_prob,all_valid_labels,all_valid_family,habitats,families,destination_dir)
     species_plot(all_valid_real_prob,all_valid_labels,all_valid_species,destination_dir)
     prob_distribution(all_valid_real_prob,all_valid_labels,habitats,destination_dir)
+    f1_per_cls(all_valid_real_prob,all_valid_labels,habitats,destination_dir)
 
     tsne(all_valid_features,all_valid_labels,destination_dir)
 

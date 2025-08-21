@@ -34,7 +34,7 @@ def predictions_last_epochs(device,model,dataloader, justvalid=False):
                     all_train_preds.extend(preds.cpu().numpy())
                     all_train_labels.extend(labels)
                     all_train_features.extend(features.cpu().numpy())
-                    all_train_real_prob.extend(outputs.cpu().numpy())
+                    all_train_real_prob.extend(torch.sigmoid(outputs).cpu().numpy())
                     all_train_species.extend(info[:,0])
                     all_train_sexe.extend(info[:,1])
                     all_train_family.extend(info[:,2].cpu().numpy())

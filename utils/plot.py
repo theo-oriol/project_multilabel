@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 import colorsys
 import random
 import math
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
 import torch 
 from torcheval.metrics import MultilabelPrecisionRecallCurve
+from torchmetrics.functional import average_precision
 
 def generate_n_colors(n):
         hues = np.linspace(0, 1, n, endpoint=False)
@@ -104,53 +106,70 @@ def plot_loss(epochs,metrics,destination_dir):
 
 
 def pression_recall(all_valid_real_prob,all_valid_labels,habitat,destination_dir):
-    metric = MultilabelPrecisionRecallCurve(num_labels=all_valid_real_prob.shape[1])
-    metric.update(torch.from_numpy(all_valid_real_prob), torch.from_numpy(all_valid_labels))
+
+    probs = torch.from_numpy(all_valid_real_prob).float()
+    labels = torch.from_numpy(all_valid_labels).int()
+
+    metric = MultilabelPrecisionRecallCurve(num_labels=probs.shape[1])
+    metric.update(probs, labels)
     precision, recall, _ = metric.compute()
 
-    
-    colors = generate_n_colors(len(precision))
+    colors = generate_n_colors(probs.shape[1])
+    random.seed(42)
     random.shuffle(colors)
 
-    recall_grid = np.linspace(0, 1, 500)
+    recall_grid = np.linspace(0, 1, 100)
     interp_precisions = []
     ap_per_class = []
-    plt.figure(figsize=(10,5))
+    images_per_class = []
+    habitat_superior_0_img = []
+    ap_min_100_img = []
+
+    plt.figure(figsize=(10, 5))
 
     for i in range(len(precision)):
-        # Sort by recall
+        label_sum = labels[:, i].sum().item()
+        if label_sum == 0:
+            continue
+
+        images_per_class.append(label_sum)
+        habitat_superior_0_img.append(habitat[i])
+
         rec = np.array(recall[i])
         prec = np.array(precision[i])
         sorted_idx = np.argsort(rec)
         rec = rec[sorted_idx]
         prec = prec[sorted_idx]
-        
-        # Interpolate onto common grid (fill missing values with 0)
+
         interp = np.interp(recall_grid, rec, prec, left=0, right=0)
         interp_precisions.append(interp)
-        
-        plt.plot(rec, prec, label=f"{habitat[i]} {np.mean(prec):.3f}", color=colors[i])
-        ap = np.trapz(prec, rec)
+
+        ap = average_precision(probs[:, i], labels[:, i],task="binary").item()
         ap_per_class.append(ap)
+        if label_sum > 100:
+            ap_min_100_img.append(ap)
+
+        plt.plot(rec, prec, label=f"{habitat[i]} | AP: {ap:.3f} | #img: {label_sum}", color=colors[i])
 
     interp_precisions = np.array(interp_precisions)
     mAP_curve = np.mean(interp_precisions, axis=0)
-    mAP_value = np.mean(mAP_curve)
+    mAP_value = np.mean(ap_per_class)
+    mAP_value_100_min = np.mean(ap_min_100_img) if ap_min_100_img else 0
 
-    plt.plot(recall_grid, mAP_curve, linewidth=4, color='black', label=f"mAP {mAP_value:.3f}")
+    plt.plot(recall_grid, mAP_curve, linewidth=4, color='black',
+            label=f"mAP: {mAP_value:.3f}, mAP ≥100 imgs: {mAP_value_100_min:.3f}")
 
-    plt.xlabel("recall")
-    plt.ylabel("precision")
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
     plt.ylim(0, 1)
-    plt.legend(title="Class",loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.legend(title="Class", loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(os.path.join(destination_dir,"PR"))
+    plt.savefig(os.path.join(destination_dir, "PR.png"))
+    plt.close()
 
-
-    x = np.arange(len(habitat))
+    x = np.arange(len(habitat_superior_0_img))
     ap_per_class = np.array(ap_per_class)
-    images_per_class = np.sum(all_valid_labels, axis=0)
     images_per_class = np.array(images_per_class)
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -160,16 +179,14 @@ def pression_recall(all_valid_real_prob,all_valid_labels,habitat,destination_dir
     ax1.set_xlabel("Habitat")
     ax1.set_ylim(0, 1)
     ax1.set_xticks(x)
-    ax1.set_xticklabels(habitat, rotation=45, ha='right')
+    ax1.set_xticklabels(habitat_superior_0_img, rotation=45, ha='right')
     ax1.grid(True, axis='y')
 
-    # Secondary y-axis for image count
     ax2 = ax1.twinx()
     ax2.plot(x, images_per_class, 'r--o', label='Image Count', linewidth=2)
     ax2.set_ylabel("Number of Images", color='red')
     ax2.tick_params(axis='y', labelcolor='red')
 
-    # Legends
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
@@ -177,6 +194,7 @@ def pression_recall(all_valid_real_prob,all_valid_labels,habitat,destination_dir
     plt.tight_layout()
     plt.savefig(os.path.join(destination_dir, "AP_per_class_with_image_count.png"))
     plt.close()
+    
 
 
 def families_plot(all_valid_real_prob,all_valid_labels,all_valid_family,habitat,families,destination_dir):
@@ -382,4 +400,67 @@ def prob_distribution(all_valid_real_prob,all_valid_labels,habitats,destination_
     out_path = os.path.join(destination_dir, "probability_distribution_with_precision.png")
     fig.savefig(out_path, bbox_inches="tight", dpi=200)
     plt.close(fig)
+    return out_path
+
+
+
+def f1_per_cls(all_valid_real_prob,all_valid_labels,habitats,destination_dir):
+    labels = np.asarray(all_valid_labels)
+    probs = np.asarray(all_valid_real_prob)
+    assert probs.shape == labels.shape, "probs and labels must have the same shape (N, C)"
+    N, n = probs.shape
+
+
+
+
+
+
+    # Shared binning across classes for consistency
+
+    f1 = np.zeros(n)
+    count = np.zeros(n)
+    for i in range(n):
+
+        p = probs[:, i]
+        y = labels[:, i].astype(int)
+
+        count[i] = np.sum(y)
+
+
+        preds_20, preds_80, labels_20, labels_80 = train_test_split(
+        p, y, test_size=0.8, random_state=42, stratify=y
+        )
+        
+        best_thresh = 0.1
+        best_prec = -1
+        for t in np.linspace(0, 1, 101): 
+            pred_bin = (preds_20 >= t).astype(int)
+            if pred_bin.sum() > 0:  
+                prec = f1_score(labels_20, pred_bin)
+                if prec > best_prec:
+                    best_prec = prec
+                    best_thresh = t
+        pred_bin_80 = (preds_80 >= best_thresh).astype(int)
+        f1[i] = f1_score(labels_80, pred_bin_80, zero_division=0)
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+    
+
+    ax1.bar(np.arange(n), f1, alpha=0.7)
+    
+    ax1.set_xticks(np.arange(n)-0.05, habitats, rotation=45)
+    ax1.set_xlabel("F1 Score")
+    ax1.set_title("F1 Score per Class")
+
+    ax2 = ax1.twinx()
+    ax2.plot(np.arange(n), count, color='red', marker='o', linestyle='-', linewidth=2, markersize=5)
+    ax2.set_ylabel("Number of Images", color='red')
+
+    plt.grid(axis='x', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    out_path = os.path.join(destination_dir, "f1_per_class.png")
+    plt.savefig(out_path, bbox_inches="tight", dpi=200)
+    plt.close()
+
+    
     return out_path
