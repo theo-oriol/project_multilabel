@@ -433,6 +433,7 @@ def f1_per_cls(all_valid_real_prob,all_valid_labels,habitats,destination_dir):
         
         best_thresh = 0.1
         best_prec = -1
+        
         for t in np.linspace(0, 1, 101): 
             pred_bin = (preds_20 >= t).astype(int)
             if pred_bin.sum() > 0:  
