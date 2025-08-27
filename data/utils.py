@@ -96,7 +96,7 @@ def extract_labels_and_image(all_species_name, labels_in_csv, family, split):
                     list_of_train_image_labels.append(labels_in_csv[species])
                     list_of_train_image_path.append(indiv[0])
                     list_of_train_image_info.append((list_of_species_id[species],indiv[1],list_of_family_id[fam]))
-            elif species in valid_species:             
+            elif species in valid_species:          
                 for indiv in all_species_name[species]:
                     list_of_valid_image_labels.append(labels_in_csv[species])
                     list_of_valid_image_path.append(indiv[0])

@@ -5,9 +5,6 @@ from torchvision.transforms.functional import pad
 from torchvision import transforms
 
 def get_padding(image):    
-    """
-    Add padding to an image to make it a square 
-    """
     w, h = image.size
     max_wh = np.max([w, h])
     h_padding = (max_wh - w) / 2
@@ -29,7 +26,6 @@ class NewPad(object):
 
 class RandomBlackout(object):
     def __call__(self, img):
-        # Choose one of the three options at random
         choice = random.choice(['left', 'right', 'none'])
         if choice == 'none':
             return img
@@ -44,9 +40,6 @@ class RandomBlackout(object):
         return img
     
 class ApplyTransform:
-    """
-    resize, dataaugmentation and normalisation 
-    """
     def __init__(self,model,img_size=224):
         self.resize = transforms.Compose([
             NewPad(),
@@ -89,13 +82,6 @@ class ApplyTransform:
                 transforms.Normalize(
                         mean=(123.675, 116.28, 103.53),
                         std=(58.395, 57.12, 57.375),
-                ),
-            ])
-        elif model == 'CNN' : 
-            self.normalise = transforms.Compose([
-                transforms.Normalize(
-                        mean=([0.5]*3),
-                        std=([0.5]*3),
                 ),
             ])
         elif model == 'inceptionv4':

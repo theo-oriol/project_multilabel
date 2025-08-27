@@ -34,6 +34,7 @@ def check(train,valid, habitat_name,destination_dir):
 
 
 def plot_species_balance(species, destination_dir):
+
     species_counts = np.zeros(np.max(species)+1)
     for s in species:
         species_counts[s] += 1
