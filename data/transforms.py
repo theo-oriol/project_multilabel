@@ -48,7 +48,6 @@ class ApplyTransform:
 
         self.augment = transforms.Compose([       
             transforms.RandomApply([ transforms.RandomResizedCrop(img_size, scale=(0.6, 1.2), ratio=(0.75, 1.33))],p=0.1),
-            transforms.RandomApply([ transforms.RandomHorizontalFlip()],p=0.1),
             transforms.RandomApply([ transforms.RandomVerticalFlip()],p=0.1),
             transforms.RandomApply([ transforms.RandomRotation(degrees=5)],p=0.1),
             transforms.RandomApply([
