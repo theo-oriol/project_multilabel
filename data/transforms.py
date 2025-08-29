@@ -64,9 +64,6 @@ class ApplyTransform:
                 transforms.RandomPosterize(bits=3)
             ], p=0.1),     
 
-            transforms.RandomApply([
-                transforms.GaussianBlur(kernel_size=5, sigma=(0.1, 3.0))
-            ], p=0.3),    
 
             transforms.RandomApply([
                 RandomBlackout()
